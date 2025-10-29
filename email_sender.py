@@ -10,6 +10,66 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from getpass import getpass
 
+try:
+    import msvcrt
+    WINDOWS = True
+except ImportError:
+    import tty
+    import termios
+    WINDOWS = False
+
+
+def getpass_with_asterisks(prompt="Password: "):
+    """
+    Get password input with asterisk masking (cross-platform).
+    Works on both Windows and Unix-like systems.
+    """
+    print(prompt, end='', flush=True)
+    password = ""
+    
+    if WINDOWS:
+        # Windows implementation
+        while True:
+            ch = msvcrt.getch()
+            if ch in (b'\r', b'\n'):  # Enter key
+                print()
+                break
+            elif ch == b'\x08':  # Backspace
+                if password:
+                    password = password[:-1]
+                    print('\b \b', end='', flush=True)
+            elif ch == b'\x03':  # Ctrl+C
+                print()
+                raise KeyboardInterrupt
+            else:
+                password += ch.decode('utf-8', errors='ignore')
+                print('*', end='', flush=True)
+    else:
+        # Unix/Linux implementation
+        fd = sys.stdin.fileno()
+        old_settings = termios.tcgetattr(fd)
+        try:
+            tty.setraw(fd)
+            while True:
+                ch = sys.stdin.read(1)
+                if ch in ('\r', '\n'):  # Enter key
+                    print()
+                    break
+                elif ch == '\x7f':  # Backspace/Delete
+                    if password:
+                        password = password[:-1]
+                        print('\b \b', end='', flush=True)
+                elif ch == '\x03':  # Ctrl+C
+                    print()
+                    raise KeyboardInterrupt
+                else:
+                    password += ch
+                    print('*', end='', flush=True)
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+    
+    return password
+
 
 def send_email(sender_email, sender_password, recipient_email, subject, body):
     """
@@ -67,7 +127,7 @@ def main():
     
     # Get email details from user
     sender_email = input("Your Gmail address: ").strip()
-    sender_password = getpass("Your Gmail App Password (hidden): ")
+    sender_password = getpass_with_asterisks("Your Gmail App Password: ")
     
     print()
     recipient_email = input("Recipient email: ").strip()
