@@ -1,0 +1,5 @@
+{
+  "sender_email": "your-email@gmail.com",
+  "recipient_email": "recipient@example.com",
+  "sender_password": "base64_encoded_app_password"
+}

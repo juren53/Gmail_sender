@@ -6,6 +6,10 @@ Quickly send emails without opening the full Gmail interface.
 
 import smtplib
 import sys
+import os
+import json
+import base64
+from pathlib import Path
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from getpass import getpass
@@ -17,6 +21,59 @@ except ImportError:
     import tty
     import termios
     WINDOWS = False
+
+
+def get_config_path():
+    """Get the path to the configuration file."""
+    return Path.home() / '.gmail_sender_config.json'
+
+
+def encode_password(password):
+    """Simple encoding for password (NOT cryptographically secure, just obfuscation)."""
+    return base64.b64encode(password.encode()).decode()
+
+
+def decode_password(encoded):
+    """Decode the obfuscated password."""
+    return base64.b64decode(encoded.encode()).decode()
+
+
+def load_config():
+    """Load configuration from file."""
+    config_path = get_config_path()
+    if not config_path.exists():
+        return {}
+    
+    try:
+        with open(config_path, 'r') as f:
+            config = json.load(f)
+            # Decode password if present
+            if 'sender_password' in config:
+                config['sender_password'] = decode_password(config['sender_password'])
+            return config
+    except Exception as e:
+        print(f"Warning: Could not load config file: {e}")
+        return {}
+
+
+def save_config(sender_email, recipient_email, sender_password):
+    """Save configuration to file."""
+    config_path = get_config_path()
+    config = {
+        'sender_email': sender_email,
+        'recipient_email': recipient_email,
+        'sender_password': encode_password(sender_password)
+    }
+    
+    try:
+        with open(config_path, 'w') as f:
+            json.dump(config, f, indent=2)
+        # Set file permissions to be readable only by owner (Unix-like systems)
+        if not WINDOWS:
+            os.chmod(config_path, 0o600)
+        print(f"✓ Configuration saved to {config_path}")
+    except Exception as e:
+        print(f"Warning: Could not save config file: {e}")
 
 
 def getpass_with_asterisks(prompt="Password: "):
@@ -125,12 +182,29 @@ def main():
     """Main CLI interface for sending emails."""
     print("=== Quick Gmail Sender ===\n")
     
-    # Get email details from user
-    sender_email = input("Your Gmail address: ").strip()
-    sender_password = getpass_with_asterisks("Your Gmail App Password: ")
+    # Load configuration
+    config = load_config()
+    
+    # Get email details from user (with defaults from config)
+    default_sender = config.get('sender_email', '')
+    sender_prompt = f"Your Gmail address [{default_sender}]: " if default_sender else "Your Gmail address: "
+    sender_email = input(sender_prompt).strip() or default_sender
+    
+    # Ask for password if not in config or if user wants to update it
+    if config.get('sender_password'):
+        use_saved = input("Use saved App Password? (y/n): ").strip().lower()
+        if use_saved == 'y':
+            sender_password = config['sender_password']
+        else:
+            sender_password = getpass_with_asterisks("Your Gmail App Password: ")
+    else:
+        sender_password = getpass_with_asterisks("Your Gmail App Password: ")
     
     print()
-    recipient_email = input("Recipient email: ").strip()
+    default_recipient = config.get('recipient_email', '')
+    recipient_prompt = f"Recipient email [{default_recipient}]: " if default_recipient else "Recipient email: "
+    recipient_email = input(recipient_prompt).strip() or default_recipient
+    
     subject = input("Subject: ").strip()
     
     print("\nEmail body (press Ctrl+Z then Enter on Windows, or Ctrl+D on Unix when done):")
@@ -154,7 +228,13 @@ def main():
         return
     
     # Send the email
-    send_email(sender_email, sender_password, recipient_email, subject, body)
+    success = send_email(sender_email, sender_password, recipient_email, subject, body)
+    
+    # Ask to save configuration
+    if success:
+        save_conf = input("\nSave these settings as defaults? (y/n): ").strip().lower()
+        if save_conf == 'y':
+            save_config(sender_email, recipient_email, sender_password)
 
 
 if __name__ == "__main__":

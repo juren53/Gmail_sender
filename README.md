@@ -5,10 +5,12 @@ A simple Python CLI tool for sending emails via Gmail without opening your full 
 ## Features
 
 - 🚀 Quick email sending from command line
-- 🔒 Secure password input (hidden)
+- 🔒 Secure password input with asterisk masking
+- 💾 Save default settings (sender, recipient, password)
 - ✅ Confirmation before sending
 - 📧 Plain text email support
 - 🎯 Simple and lightweight
+- 🖥️ Cross-platform (Windows, Linux, macOS)
 
 ## Requirements
 
@@ -42,12 +44,13 @@ python email_sender.py
 ```
 
 Follow the prompts:
-1. Enter your Gmail address
-2. Enter your Gmail App Password (will be hidden)
-3. Enter recipient email
+1. Enter your Gmail address (or press Enter to use saved default)
+2. Choose to use saved App Password or enter a new one (shown as asterisks)
+3. Enter recipient email (or press Enter to use saved default)
 4. Enter subject
-5. Enter body (press Ctrl+Z then Enter when done on Windows)
+5. Enter body (press Ctrl+Z then Enter on Windows, or Ctrl+D on Unix)
 6. Confirm and send
+7. Optionally save settings for future use
 
 ### Example Session
 
@@ -55,7 +58,7 @@ Follow the prompts:
 === Quick Gmail Sender ===
 
 Your Gmail address: your.email@gmail.com
-Your Gmail App Password (hidden): 
+Your Gmail App Password: ****************
 Recipient email: friend@example.com
 Subject: Quick update
 
@@ -75,6 +78,30 @@ Connecting to Gmail SMTP server...
 Logging in...
 Sending email...
 ✓ Email sent successfully to friend@example.com
+
+Save these settings as defaults? (y/n): y
+✓ Configuration saved to /home/user/.gmail_sender_config.json
+```
+
+## Configuration File
+
+The script can save your default settings to `~/.gmail_sender_config.json`. This file stores:
+- Default sender email
+- Default recipient email  
+- App Password (base64 encoded for basic obfuscation)
+
+**Note**: The password encoding is NOT cryptographically secure - it's just basic obfuscation. Keep the config file permissions restricted (automatic on Unix-like systems).
+
+### Manual Configuration
+
+You can manually create or edit `~/.gmail_sender_config.json`:
+
+```json
+{
+  "sender_email": "your-email@gmail.com",
+  "recipient_email": "recipient@example.com",
+  "sender_password": "base64_encoded_app_password"
+}
 ```
 
 ## Future Enhancements
@@ -85,7 +112,7 @@ Potential features for future versions:
 - File attachments
 - Multiple recipients (CC, BCC)
 - Email templates
-- Configuration file for sender credentials
+- More secure password encryption
 - GUI interface
 
 ## Troubleshooting
@@ -99,6 +126,8 @@ Potential features for future versions:
 ## Security Notes
 
 - Never share your App Password
-- The script does not store your credentials
-- Password input is hidden for security
-- Consider using environment variables for automation (future feature)
+- Config file uses basic obfuscation (not encryption) for the password
+- On Unix-like systems, config file permissions are automatically set to user-only (600)
+- Password input is masked with asterisks for security
+- Store the config file in a secure location
+- Consider using system keychains for more secure storage (future feature)
