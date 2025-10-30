@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 """
-Simple CLI Email Sender for Gmail
+Quickmail - Simple CLI Email Sender for Gmail
 Quickly send emails without opening the full Gmail interface.
+
+Version: 0.1.0
+Date: 2025-01-29 20:21:00
 """
 
 import smtplib
@@ -9,10 +12,14 @@ import sys
 import os
 import json
 import base64
+from datetime import datetime
 from pathlib import Path
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from getpass import getpass
+
+__version__ = "0.1.0"
+__date__ = "2025-01-29 20:21:00"
 
 try:
     import msvcrt
@@ -178,9 +185,44 @@ def send_email(sender_email, sender_password, recipient_email, subject, body):
         return False
 
 
+def show_help():
+    """Display help information."""
+    help_text = f"""
+Quickmail v{__version__} - Simple CLI Email Sender for Gmail
+
+USAGE:
+  python quickmail.py [--help]
+
+DESCRIPTION:
+  Quick command-line tool for sending emails via Gmail without opening
+  the full Gmail interface. Supports saving default settings for faster sends.
+
+FEATURES:
+  • Cross-platform (Windows, Linux, macOS)
+  • Secure password input with asterisk masking
+  • Save default sender, recipient, and App Password
+  • Configuration stored in ~/.gmail_sender_config.json
+  • Plain text email support
+
+REQUIREMENTS:
+  • Gmail account with App Password enabled
+  • Generate App Password at: https://myaccount.google.com/apppasswords
+
+MORE INFO:
+  https://github.com/juren53/Gmail_sender/blob/main/README.md
+"""
+    print(help_text)
+
+
 def main():
     """Main CLI interface for sending emails."""
-    print("=== Quick Gmail Sender ===\n")
+    # Check for help flag
+    if '--help' in sys.argv or '-h' in sys.argv:
+        show_help()
+        sys.exit(0)
+    
+    print("=== Quick Gmail Sender ===")
+    print(f"Version {__version__} ({__date__})")
     
     # Load configuration
     config = load_config()
