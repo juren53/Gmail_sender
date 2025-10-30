@@ -3,8 +3,8 @@
 Quickmail - Simple CLI Email Sender for Gmail
 Quickly send emails without opening the full Gmail interface.
 
-Version: 0.1.2
-Date: 2025-01-30 01:17:00
+Version: 0.1.3
+Date: 2025-10-30 06:45:43
 """
 
 import smtplib
@@ -18,8 +18,8 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from getpass import getpass
 
-__version__ = "0.1.2"
-__date__ = "2025-01-30 01:17:00"
+__version__ = "0.1.3"
+__date__ = "2025-10-30 06:45:43"
 
 try:
     import msvcrt
@@ -185,13 +185,52 @@ def send_email(sender_email, sender_password, recipient_email, subject, body):
         return False
 
 
+def show_settings():
+    """Display current settings from config file."""
+    config_path = get_config_path()
+    
+    if not config_path.exists():
+        print("No configuration file found.")
+        print(f"Expected location: {config_path}")
+        return
+    
+    try:
+        with open(config_path, 'r') as f:
+            config = json.load(f)
+        
+        print("=== Current Settings ===")
+        print(f"Config file: {config_path}")
+        print()
+        print(f"Sender email:    {config.get('sender_email', '(not set)')}")
+        print(f"Recipient email: {config.get('recipient_email', '(not set)')}")
+        
+        # Show if password is stored (but don't reveal it)
+        if 'sender_password' in config and config['sender_password']:
+            print(f"App Password:    (saved)")
+        else:
+            print(f"App Password:    (not set)")
+    except Exception as e:
+        print(f"Error reading config file: {e}")
+
+
+def show_version():
+    """Display version and commit date/time."""
+    print(f"Quickmail v{__version__}")
+    print(f"Date: {__date__}")
+
+
 def show_help():
     """Display help information."""
     help_text = f"""
 Quickmail v{__version__} - Simple CLI Email Sender for Gmail
 
 USAGE:
-  python quickmail.py [--help]
+  python quickmail.py [OPTIONS]
+
+OPTIONS:
+  --help, -h       Show this help message
+  --settings       Display current saved settings
+  --version, -v    Show version and commit date/time
 
 DESCRIPTION:
   Quick command-line tool for sending emails via Gmail without opening
@@ -219,6 +258,16 @@ def main():
     # Check for help flag
     if '--help' in sys.argv or '-h' in sys.argv:
         show_help()
+        sys.exit(0)
+    
+    # Check for version flag
+    if '--version' in sys.argv or '-v' in sys.argv:
+        show_version()
+        sys.exit(0)
+    
+    # Check for settings flag
+    if '--settings' in sys.argv:
+        show_settings()
         sys.exit(0)
     
     print("=== Quick Gmail Sender ===")
@@ -274,7 +323,12 @@ def main():
     
     # Ask to save configuration
     if success:
-        save_conf = input("\nSave these settings as defaults? (y/n): ").strip().lower()
+        print("\n=== Configuration to Save ===")
+        print(f"Sender email:    {sender_email}")
+        print(f"Recipient email: {recipient_email}")
+        print(f"App Password:    {'(will be saved)' if sender_password else '(not set)'}")
+        print()
+        save_conf = input("Save these settings as defaults? (y/n): ").strip().lower()
         if save_conf == 'y':
             save_config(sender_email, recipient_email, sender_password)
         else:
