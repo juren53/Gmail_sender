@@ -40,7 +40,7 @@ Make sure Python 3 is installed on your system. No additional packages required 
 Run the script:
 
 ```bash
-python email_sender.py
+python quickmail.py
 ```
 
 Follow the prompts:
