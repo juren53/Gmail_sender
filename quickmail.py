@@ -234,8 +234,8 @@ def main():
     
     # Ask for password if not in config or if user wants to update it
     if config.get('sender_password'):
-        use_saved = input("Use saved App Password? (y/n): ").strip().lower()
-        if use_saved == 'y':
+        use_saved = input("Use saved App Password? (Y/n): ").strip().lower()
+        if not use_saved or use_saved == 'y':
             sender_password = config['sender_password']
         else:
             sender_password = getpass_with_asterisks("Your Gmail App Password: ")
@@ -264,8 +264,8 @@ def main():
     print(f"Body: {body[:100]}{'...' if len(body) > 100 else ''}")
     print("="*50)
     
-    confirm = input("\nSend this email? (y/n): ").strip().lower()
-    if confirm != 'y':
+    confirm = input("\nSend this email? (Y/n): ").strip().lower()
+    if confirm and confirm != 'y':
         print("Cancelled.")
         return
     
