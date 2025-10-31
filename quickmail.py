@@ -229,7 +229,7 @@ USAGE:
 
 OPTIONS:
   --help, -h       Show this help message
-  --settings       Display current saved settings
+  --settings -s    Display current saved settings
   --version, -v    Show version and commit date/time
 
 DESCRIPTION:
