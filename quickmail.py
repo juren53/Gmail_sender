@@ -229,7 +229,7 @@ USAGE:
 
 OPTIONS:
   --help, -h       Show this help message
-  --settings -s    Display current saved settings
+  --settings, -s   Display current saved settings
   --version, -v    Show version and commit date/time
 
 DESCRIPTION:
@@ -266,7 +266,7 @@ def main():
         sys.exit(0)
     
     # Check for settings flag
-    if '--settings' in sys.argv:
+    if '--settings' in sys.argv or '-s' in sys.argv:
         show_settings()
         sys.exit(0)
     
