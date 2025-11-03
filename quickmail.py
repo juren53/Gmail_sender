@@ -12,6 +12,9 @@ import sys
 import os
 import json
 import base64
+import subprocess
+import tempfile
+import argparse
 from datetime import datetime
 from pathlib import Path
 from email.mime.text import MIMEText
@@ -135,6 +138,49 @@ def getpass_with_asterisks(prompt="Password: "):
     return password
 
 
+def edit_in_editor(initial_text=""):
+    """
+    Open user's preferred editor for composing email body.
+    Uses $EDITOR or $VISUAL environment variable, or falls back to defaults.
+    
+    Args:
+        initial_text: Optional initial text to populate in editor
+        
+    Returns:
+        String content from the editor
+    """
+    # Determine editor (check EDITOR, VISUAL env vars, or use defaults)
+    editor = os.environ.get('EDITOR') or os.environ.get('VISUAL')
+    
+    if not editor:
+        if WINDOWS:
+            editor = 'notepad.exe'
+        elif sys.platform == 'darwin':
+            editor = 'nano'  # Could also use 'open -e' for TextEdit
+        else:
+            editor = 'nano'
+    
+    # Create temp file
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False, encoding='utf-8') as f:
+        f.write(initial_text)
+        temp_path = f.name
+    
+    try:
+        # Open editor
+        print(f"Opening editor: {editor}")
+        subprocess.call([editor, temp_path])
+        
+        # Read back content
+        with open(temp_path, 'r', encoding='utf-8') as f:
+            return f.read()
+    finally:
+        # Clean up temp file
+        try:
+            os.unlink(temp_path)
+        except:
+            pass
+
+
 def send_email(sender_email, sender_password, recipient_email, subject, body):
     """
     Send an email via Gmail SMTP server.
@@ -231,6 +277,7 @@ OPTIONS:
   --help, -h       Show this help message
   --settings, -s   Display current saved settings
   --version, -v    Show version and commit date/time
+  --edit, -e       Use text editor for composing email body
 
 DESCRIPTION:
   Quick command-line tool for sending emails via Gmail without opening
@@ -242,6 +289,7 @@ FEATURES:
   • Save default sender, recipient, and App Password
   • Configuration stored in ~/.gmail_sender_config.json
   • Plain text email support
+  • Editor support for composing emails (--edit flag)
 
 REQUIREMENTS:
   • Gmail account with App Password enabled
@@ -255,18 +303,30 @@ MORE INFO:
 
 def main():
     """Main CLI interface for sending emails."""
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser(
+        description='Quick Gmail Sender - Send emails from the command line',
+        add_help=False
+    )
+    parser.add_argument('--help', '-h', action='store_true', help='Show help message')
+    parser.add_argument('--version', '-v', action='store_true', help='Show version')
+    parser.add_argument('--settings', '-s', action='store_true', help='Show current settings')
+    parser.add_argument('--edit', '-e', action='store_true', help='Use text editor for email body')
+    
+    args = parser.parse_args()
+    
     # Check for help flag
-    if '--help' in sys.argv or '-h' in sys.argv:
+    if args.help:
         show_help()
         sys.exit(0)
     
     # Check for version flag
-    if '--version' in sys.argv or '-v' in sys.argv:
+    if args.version:
         show_version()
         sys.exit(0)
     
     # Check for settings flag
-    if '--settings' in sys.argv or '-s' in sys.argv:
+    if args.settings:
         show_settings()
         sys.exit(0)
     
@@ -298,12 +358,17 @@ def main():
     
     subject = input("Subject: ").strip()
     
-    print("\nEmail body (press Ctrl+Z then Enter on Windows, or Ctrl+D on Unix when done):")
-    try:
-        body = sys.stdin.read()
-    except KeyboardInterrupt:
-        print("\n\nCancelled.")
-        return
+    # Get email body - either via editor or stdin
+    if args.edit:
+        print("\nOpening text editor for email body...")
+        body = edit_in_editor()
+    else:
+        print("\nEmail body (press Ctrl+Z then Enter on Windows, or Ctrl+D on Unix when done):")
+        try:
+            body = sys.stdin.read()
+        except KeyboardInterrupt:
+            print("\n\nCancelled.")
+            return
     
     # Confirm before sending
     print("\n" + "="*50)
