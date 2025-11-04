@@ -3,8 +3,8 @@
 Quickmail - Simple CLI Email Sender for Gmail
 Quickly send emails without opening the full Gmail interface.
 
-Version: 0.1.3
-Date: 2025-10-30 06:45:43
+Version: 0.2.0
+Date: 2025-11-04 07:25:57
 """
 
 import smtplib
@@ -21,8 +21,8 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from getpass import getpass
 
-__version__ = "0.1.3"
-__date__ = "2025-10-30 06:45:43"
+__version__ = "0.2.0"
+__date__ = "2025-11-04 07:25:57"
 
 try:
     import msvcrt

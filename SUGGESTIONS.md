@@ -260,6 +260,6 @@ More real-world usage examples in README.
 ## Notes
 
 - The project already includes `quickmail_alias.txt` - this feature may be partially implemented or planned
-- Version in code: 0.1.3 (2025-10-30 06:45:43)
+- Version in code: 0.2.0 (2025-11-04 07:25:57)
 - Focus on maintaining simplicity and CLI-first design
 - Consider creating a separate GUI version as a different project
